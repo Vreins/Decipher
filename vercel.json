@@ -1,7 +1,7 @@
 {
   "builds": [
     {
-      "src": "project_name/wsgi.py",
+      "src": "chatgpt/wsgi.py",
       "use": "@vercel/python"
     }
   ],
@@ -12,7 +12,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "project_name/wsgi.py"
+      "dest": "chatgpt/wsgi.py"
     }
   ]
 }
