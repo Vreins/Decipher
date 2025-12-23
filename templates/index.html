@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DECipher</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+          integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../static/css/styles.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.0/themes/base/jquery-ui.css">
+    <link rel="icon" href="https://devme.ai/wp-content/uploads/2024/10/dec-ai-full-color-logo-2.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<main>
+    <div class="menu-toggle" id="dec-sidebar-toggle">
+        <div class="hamburger">
+            <span></span>
+        </div>
+    </div>
+
+    <div class="menu-toggle" id="dec-sources-toggle" style="left: 10px !important;">
+        <div class="hamburger">
+            <i class="fas fa-sitemap"></i>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-3 dec-sidebar-container" style="padding-right: 0 !important;">
+            <div class="dec-sidebar">
+                {% load static %}
+                <div class="dec-logo p-3" style="border-bottom: 1px solid #77BDB2; width: 100%;">
+                    <img src="{% static '/img/logo.png' %}" style="width: 60%"/>
+                </div>
+                
+                
+                <div class="p-3 dec-new-chat-button-container" style="border-bottom: 1px solid white">
+                    <form id="uploadForm" enctype="multipart/form-data" method="post">
+                        {% csrf_token %}
+                        <div class="p-3 dec-new-chat-button-container" style="border-bottom: 1px solid white">
+                            <label for="fileUpload" class="dec-button">Upload Files</label>
+                            <input type="file" id="fileUpload" style="display: none;" multiple />
+                            <button type="submit" class="dec-button" id="dec_new_session">New Chat</button>
+                        </div>
+                    </form>
+                    
+                    <!-- <label for="fileUpload" class="dec-button">Upload Files</label>
+                    <input type="file" id="fileUpload" style="display: none;" multiple /> -->
+
+                    <!-- <button class="dec-button" id="dec_new_session">New Chat</button> -->
+                </div>
+                
+                <div class="p-3 dec-history" style="border-bottom: 1px solid white">
+                    <h1 class="mb-3" style="font-size: 1.125rem"><i class="fas fa-history"></i> History</h1>
+                    <div id="dec_history"></div>
+                </div>
+                <div class="d-flex justify-content-between flex-column dec-divider">
+                    <div class="p-3 dec-agents-container">
+                        <h1 class="mb-3" style="font-size: 1.125rem"><img src="static/img/agents.png"
+                                                                          style="width: 20px"/>
+                            Who's answering</h1>
+                        <input type="radio" class="radio" id="methodology" name="agent" value="methodology">
+                        <label for="methodology">Methodology Expert</label><br>
+                        <input type="radio" class="radio" id="technical" name="agent" value="technical">
+                        <label for="technical">Technical Sector Expert</label><br>
+                        <input type="radio" class="radio" id="project_imp" name="agent" value="project_imp">
+                        <label for="project_imp">Project Implementation Expert</label><br>
+                        <input type="radio" class="radio" id="mel" name="agent" value="mel">
+                        <label for="mel">MEL Expert</label><br>
+                        <input type="radio" class="radio" id="rules" name="agent" value="rules">
+                        <label for="rules">Rules Expert</label><br>
+                        <input type="radio" class="radio" id="communication" name="agent" value="communication">
+                        <label for="communication">Communication Expert</label><br>
+                        <input type="radio" class="radio" id="none" name="agent" value="none" checked>
+                        <label for="none">All</label>
+                    </div>
+                    <div class="p-3">
+                        <div class="dec-account-actions">
+                            <div class="d-none dec-username">{{ user.username }}</div>
+                            <div class="dec-user-icon"></div>
+                            <i class="fas fa-history show-history" title="Toggle History"></i>
+                            <a href="/logout_user" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-9 main-container p-0">
+            <div class="dec-overlay" style="display: none"></div>
+            <div class="dec-header-title" style="border-bottom: 1px solid #77BDB2; width: 100%;">
+                <i style="font-size: 1.5rem" class="far fa-comment-dots ms-3"></i>
+                <h1 class="mb-0 ms-1" id="dec_chat_title" style="font-size: 1.5rem"> Active Chat</h1>
+            </div>
+            <div class="dec-chat px-4">
+                <div class="dec-disclaimer">
+                    <p class="p-2" style="font-size: 10px; background: #FBE182; border-radius: 10px; width: 90%"><i>Hi there! I’m DECipher—thanks to some upgrades, I’m better! You might still notice a glitch or delay,
+                        but I’m on it. Thanks for your patience!</i></p>
+                </div>
+                <div class="loader" style="display: none"></div>
+                <div class="dec-pull-button"><i class="fas fa-chevron-left"></i>
+                    <div class="dec-sources-indicator"></div>
+                </div>
+                <div class="dec-chat-container" id="dec_chat_container"></div>
+                <div class="dec-chat-input-container" style="position: relative">
+                    <div class="dec-scroll-bottom"><i class="fas fa-chevron-down"></i></div>
+                    <textarea type="text" placeholder="Ask your question here..." id="dec_chat_input"
+                              class="dec-chat-input w-100" rows="2"></textarea>
+                    <form method="POST" id="chat-form" class="flex w-full">
+                        {% csrf_token %}
+                        <div class="dec-chat-input-submit"><i class="far fa-arrow-alt-circle-up"
+                                                              style="font-size: 1.5rem; cursor: pointer"></i></div>
+                    </form>
+                </div>
+                <div class="d-flex justify-content-end align-items-center dec-copyright">
+                    <p class="text-muted m-0 py-2" style="font-size: .7rem">©Made by I4DI – © 2024 Development Institute LLC,
+                        Washington DC, USA.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-3 sources-container p-0">
+            <div class="dec-right-sidebar-container">
+                <div style="background: #EAEFEE">
+                    <h1 class="dec-sources-title mb-0 p-3" style="font-size: 1.125rem"><i class="fas fa-sitemap" style="transform: rotate(270deg);"></i> Sources</h1>
+                    <div class="dec-sources px-3">
+                    <div id="dec_sources"></div>
+                </div>
+                </div>
+
+                <div style="background: white">
+                    <h1 class="dec-sug-que-title mb-0 p-3" style="font-size: 1.125rem"><i class="fas fa-layer-group"></i> Suggested Questions</h1>
+                    <div class="dec-suggestive-questions-container px-3">
+                        <div id="dec_suggestive_questions_container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+        integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+        crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+<script src="https://code.jquery.com/ui/1.14.0/jquery-ui.js"></script>
+<script src="https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js"></script>
+<script>
+function applyLayout() {
+    const $sidebar = $('.dec-sidebar');
+
+    let sidebarHeight = $sidebar.innerHeight();
+
+    let headerHeight = $('.dec-logo').outerHeight(true) || 0;
+    let agentsHeight = $('.dec-agents-container').outerHeight(true) || 0;
+    let buttonHeight = $('.dec-new-chat-button-container').outerHeight(true) || 0;
+    let accountHeight = $('.dec-account-actions').parent().outerHeight(true) || 0;
+
+    let rest = headerHeight + agentsHeight + buttonHeight + accountHeight;
+
+    // ✅ use 100% of sidebar, not 100vh
+    $('.dec-history').css('height', `calc(${sidebarHeight}px - ${rest}px)`);
+
+    // Right sidebar fixes
+    let sourcesTitleHeight = $('.dec-sources-title').outerHeight(true) || 0;
+    $('.dec-sources').css('height', `calc(100% - ${sourcesTitleHeight}px)`);
+
+    let sugTitleHeight = $('.dec-sug-que-title').outerHeight(true) || 0;
+    $('#dec_suggestive_questions_container').css(
+        'height',
+        `calc(100% - ${sugTitleHeight}px)`
+    );
+}
+
+
+/* Run AFTER everything loads */
+$(window).on('load', function () {
+    setTimeout(() => {
+        applyLayout();
+    }, 50);
+});
+
+
+/* Recalculate on resize */
+let resizeTimer;
+$(window).on('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+        requestAnimationFrame(applyLayout);
+    }, 200);
+});
+
+</script>
+
+<script>
+    const menu_toggle = document.querySelector('.menu-toggle');
+    const sidebar = document.querySelector('.dec-sidebar');
+
+    menu_toggle.addEventListener('click', () => {
+        menu_toggle.classList.toggle('is-active');
+        sidebar.classList.toggle('is-active');
+        $('.dec-overlay').toggle();
+    });
+
+    const sources_toggle = document.querySelector('#dec-sources-toggle');
+    sources_toggle.addEventListener('click', function () {
+        $(this).toggleClass('is-active');
+        $('.dec-right-sidebar-container').toggleClass('is-active');
+        $('.dec-overlay').toggle();
+        
+        let sourcesTitleHeight = $('.dec-sources-title').outerHeight();
+        console.log(sourcesTitleHeight)
+        $('.dec-sources').css('height', `calc(100% - ${sourcesTitleHeight}px)`);
+
+        let sugQuestionsTitleHeight = $('.dec-sug-que-title').outerHeight();
+        $('#dec_suggestive_questions_container').css('height', `calc(100% - ${sugQuestionsTitleHeight}px)`);
+    });
+
+</script>
+<script>
+    $(document).ready(function () {
+        let $headerHeight,
+            $chatContainerHeight;
+
+        $("#fileUpload").on('click', function () {
+            console.log("hello world")
+        } )
+        
+        $('#fileUpload').on('change', function () {
+            let formData = new FormData();
+            let files = $('#fileUpload')[0].files;
+
+            if (files.length > 5) {
+                alert('You can only upload up to 5 files.');
+                return;
+            }
+
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]); // 'files' matches backend name
+            }
+
+            $.ajax({
+                url: 'upload_files',  // replace with your actual URL
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: { "X-CSRFToken": getCookie("csrftoken") }, // CSRF token helper below
+                success: function (response) {
+                    console.log('Upload successful:', response);
+                    alert('Files uploaded successfully!');
+                },
+                error: function (xhr, status, error) {
+                    console.error('Upload error:', xhr.responseText);
+                    alert('Upload failed');
+                }
+            });
+        });
+
+        // Helper to get CSRF token from cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                let cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    let cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        $("#dialog").dialog({
+            autoOpen : false, modal : true,
+          });
+
+        
+        // {#$('.dec-sidebar').css('height', `calc(100dvh - ${$headerHeight}px)`);#}
+        $chatContainerHeight = $('.dec-chat-container').height();
+        $('.dec-chat-container').css('height', $chatContainerHeight);
+
+        let $agentsContainerHeight = $('.dec-agents-container').outerHeight();
+        let $buttonContainerHeight = $('.dec-new-chat-button-container').outerHeight();
+        let $accountInfoHeight = $('.dec-account-actions').parent().outerHeight();
+        let rest = $headerHeight + $agentsContainerHeight + $buttonContainerHeight + $accountInfoHeight;
+        
+        // {#$('.dec-chat').css('height', `calc(100dvh - ${($('.dec-header-title').outerHeight() + $('.dec-disclaimer').outerHeight() + $('.dec-chat-input-container').outerHeight() + $('.dec-copyright').outerHeight())})`);#}
+
+        let checkScreenWidth = () => {
+            if ($('html').width() <= 767) {
+                $('.main-container').css('width', '100%');
+            }
+        }
+        checkScreenWidth();
+
+        // {#$('.dec-chat-container').css('margin-top', $('.dec-disclaimer').height());#}
+
+        $(document).on("click", ".dec-pull-button", function () {
+            $('.main-container').toggleClass("col-9 col-6");    //.removeClass('col-9').addClass('col-6');
+            $('.sources-container').toggle();
+            $(this).find('i').toggleClass("fa-chevron-right fa-chevron-left");    //.removeClass('fa-chevron-left').addClass('fa-chevron-right');
+            $('.dec-sources-indicator').hide();
+            // {#checkScreenWidth();#}
+
+            let sourcesTitleHeight = $('.dec-sources-title').outerHeight();
+            $('.dec-sources').css('height', `calc(100% - ${sourcesTitleHeight}px)`);
+
+            let sugQuestionsTitleHeight = $('.dec-sug-que-title').outerHeight();
+            $('#dec_suggestive_questions_container').css('height', `calc(100% - ${sugQuestionsTitleHeight}px)`);
+        });
+
+
+        $(document).on("click", ".show-history", function () {
+            let $historyHeight = !$('.dec-history').is(':visible') ? $('.dec-history').outerHeight() : 0;
+            let all = $headerHeight + $buttonContainerHeight + $historyHeight;
+            $('.dec-divider').css('height', `calc(100dvh - ${all}px)`);
+            $('.dec-history').toggle();
+        });
+
+        let userName = $('.dec-username').html();
+        $('.dec-user-icon').html(userName.charAt(0).toUpperCase())
+    });
+</script>
+
+<script>
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('dec_chat_input');
+    const chatHistory = document.getElementById('dec_history');
+    const chatContainer = document.getElementById('dec_chat_container');
+    const fileUploadForm = document.getElementById('file-upload-form');
+    const uploadMessage = document.getElementById('upload-message');
+    const sourceList = document.getElementById('dec_sources');
+    const suggestiveList = document.getElementById('dec_suggestive_questions_container'); // New element for suggestive questions
+    let chatHistoryData = [];
+    let currentSessionId = '';
+
+    const initialMessages = [
+        "Analyzing words and weaving meaning...",
+        "Scanning the letters, making sense of the text.",
+        "Untangling linguistic puzzles, almost there!",
+        "Breaking down sentences, hold on tight!",
+        "Connecting phrases into insights, one moment.",
+        "Decoding the message—nearly complete!",
+        "Transforming text into clarity, just a second.",
+        "Turning words into magic, stay tuned!",
+        "Processing your input, the story unfolds...",
+        "Mapping the text for meaning—hang tight!"
+    ];
+
+    const inBetweenMessages = [
+        "Just a moment, your results are taking shape!",
+        "In progress... weaving data into insights.",
+        "Hold tight, we’re halfway there!",
+        "Working on it... precision takes time.",
+        "Almost done! Adding the finishing touches.",
+        "Hang in there, we're refining the details.",
+        "Progressing steadily... stay tuned!",
+        "Data pathways are aligning, nearly complete!",
+        "Your request is under construction—almost ready!",
+        "Still working, but we're in the home stretch!"
+    ];
+
+    const finalMessages = [
+        "All set! Here’s what I’ve got for you.",
+        "Mission accomplished—your results are ready!",
+        "Voilà! Data decoded and delivered.",
+        "The wait is over—take a look!",
+        "Done and dusted! Hope this helps.",
+        "Ready when you are—here’s the outcome.",
+        "Processing complete. Let’s dive in!",
+        "Finished up! Here’s the scoop.",
+        "Your request is fulfilled. Explore away!",
+        "Here you go—fresh off the digital press!"
+    ];
+
+    const getRandom = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
+
+    $(document).ready(function () {
+        // Create new session when the page is open
+        createNewSession();
+    });
+
+
+    document.onkeydown = function (evt) {
+        let keyCode = evt ? (evt.which ? evt.which : evt.keyCode) : event.keyCode;
+        if (keyCode === 13) {
+            submitForm();
+        }
+    }
+
+    // Click on the history item
+    $(document).on("click", ".dec-history-item", function () {
+        $('.dec-history-item').removeClass('active');
+        $(this).addClass('active');
+        $('#dec_chat_title').html($(this).text().length > 50 ? $(this).text().substring(0, 50) + '...' : $(this).text());
+        let clickedSessionId = $(this).attr('data-id');
+        let usersChatHistory = chatHistoryData.filter(i => i.session_id === clickedSessionId);
+        usersChatHistory.sort(function (a, b) {
+            return new Date(a.created_at) - new Date(b.created_at);
+        });
+
+        $('#dec_chat_container').empty();
+
+        currentSessionId = clickedSessionId;
+
+        fetch('soft_select_chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                'csrfmiddlewaretoken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'sessionId': clickedSessionId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Soft select success:", data);
+        })
+        .catch(error => {
+            console.error("Soft select error:", error);
+        });
+
+        let html = ``;
+        for (let i = 0; i < usersChatHistory.length; i++) {
+            let current = usersChatHistory[i];
+            let response = current.response.replace(/\n/g, '<br>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+            html += `<div class="dec-user-message">${current.message}</div>
+            <div class="dec-ai-message">${response}</div>`;
+        }
+        $('#dec_chat_container').html(html);
+
+        let lastHistoryItem = usersChatHistory[usersChatHistory.length - 1];
+
+        let questions = lastHistoryItem.suggestive_question !== '' ? lastHistoryItem.suggestive_question.split(/\r?\n/) : [];
+        if (questions.length > 0) {
+            let questionHtml = ``;
+            $('#dec_suggestive_questions_container').empty();
+            for (let i = 0; i < questions.length; i++) {
+                let current = questions[i];
+                if (current.replace(/\s/g, "") !== '') {
+                    questionHtml += `<div class="dec-question-card"><i class="fas fa-arrow-circle-left"></i><div class="dec-question-text">${current}</div></div>`
+                }
+            }
+            $('#dec_suggestive_questions_container').html(questionHtml);
+
+            if ($('.main-container').hasClass('col-9')) {
+                $('.dec-sources-indicator').show();
+            }
+        }
+
+        let sources = lastHistoryItem.sources !== '' ? lastHistoryItem.sources.split(/\r?\n/) : [];
+        if (sources.length > 0) {
+            // todo link to sources need to be included when history is fetched
+            let sourcesHtml = ``;
+            $('#dec_sources').empty();
+            for (let i = 0; i < sources.length; i++) {
+                let current = sources[i];
+                if (current.replace(/\s/g, "") !== '') {
+                    sourcesHtml += `<div class="dec-sources-item"><div class="dec-sources-num">${i}</div><a class="dec-sources-title" href="#">${current}</a></div>`
+                }
+            }
+            $('#dec_sources').html(sourcesHtml);
+
+            if ($('.main-container').hasClass('col-9')) {
+                $('.dec-sources-indicator').show();
+            }
+        }
+
+        $("#" + lastHistoryItem.agent).prop("checked", true);
+    });
+
+    $(document).on('click', '.dec-history-item-delete', function () {
+        let clickedSessionId = $(this).attr('data-id');
+
+        fetch('soft_delete_chat', {
+            method: 'POST',
+            body: new URLSearchParams({
+                'csrfmiddlewaretoken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'sessionId': clickedSessionId
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                retrieveChatHistory();
+            });
+    });
+
+    // New session button
+    $('#dec_new_session').on('click', function () {
+        createNewSession();
+    });
+
+    // Submit button
+    $('.dec-chat-input-submit').on('click', function (event) {
+        event.preventDefault();
+        submitForm();
+    });
+
+    $('.dec-scroll-bottom').hide();
+
+    let checkScroll = (e) => {
+        let elem = $(e.currentTarget);
+        $('.dec-scroll-bottom').show();
+
+        if (elem[0].scrollHeight - elem.scrollTop() === Math.round(elem.outerHeight() * 10) / 10) {
+            $('.dec-scroll-bottom').hide();
+        }
+
+        let div= document.getElementById('dec_chat_container'); // need real DOM Node, not jQuery wrapper
+        let hasVerticalScrollbar= div.scrollHeight > div.clientHeight;
+        if (!hasVerticalScrollbar) {
+            $('.dec-scroll-bottom').hide();
+        }
+    }
+
+    $('#dec_chat_container').bind('scroll', checkScroll);
+
+    $('.dec-scroll-bottom').on('click', function () {
+        $('#dec_chat_container').animate({
+            scrollTop: $('#dec_chat_container')[0].scrollHeight}, 2000);
+    });
+
+    // Question asked from Suggested Questin panel
+    $(document).on("click", ".dec-question-card", function (e) {
+        let el = $(this).find('.dec-question-text')[0];
+        let message = $(el).html();
+        const agent = document.querySelector('input[name="agent"]:checked').value; // Get the selected agent
+
+        submitForm(message, agent);
+    });
+
+    let submitForm = (m = '', a = '') => {
+        const message = m === '' ? chatInput.value.trim() : m;
+        const agent = a === '' ? document.querySelector('input[name="agent"]:checked').value : a; // Get the selected agent
+
+        if (message) {
+            const messageWrapper = document.createElement('div');
+            messageWrapper.classList.add('dec-user-message');
+            messageWrapper.textContent = message;
+
+            chatContainer.appendChild(messageWrapper);
+            $('#dec_chat_container').scrollTop(chatContainer.scrollHeight);
+
+            chatInput.value = '';
+            // {#$('.loader').show();#}
+
+            const messageWrapper2 = document.createElement('div');
+            messageWrapper2.classList.add('dec-ai-message');
+            const typingEffect = document.createElement('span');
+            typingEffect.id = 'indicator_message'
+            messageWrapper2.appendChild(typingEffect);
+            chatContainer.appendChild(messageWrapper2);
+            let indicatorChanged = new Typed('#indicator_message', {
+                  strings: [initialMessages[getRandom(0, 9)], inBetweenMessages[getRandom(0, 9)]],
+                  typeSpeed: 10,
+                  startDelay: 1500,
+                  backSpeed: 20,
+                  backDelay: 5000
+              });
+
+            $('#dec_chat_container').scrollTop(chatContainer.scrollHeight);
+
+            fetch('chat_message', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    'csrfmiddlewaretoken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'message': message,
+                    'agent': agent, // Include the agent value here
+                    'sessionId': currentSessionId
+                })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return Promise.reject(response);
+                    }
+
+                    return response.json();
+                })
+                .then(data => {
+                  const response = data.response;
+                  const sources = data.sources;
+                  const source_links = data.src_link;
+                  const suggestiveQuestions = data.suggestive_question; // Retrieve suggestive questions
+                  let sanitizedResponse = response.replace(/[()]/g, '\\$&');
+
+                  const messageWrapper2 = document.createElement('div');
+                  messageWrapper2.classList.add('dec-ai-message');
+
+                  // Function to convert pipe-separated table text to HTML table
+                  function convertToTable(tableText) {
+                      const rows = tableText.split('\n').map(row => row.split('|').map(cell => cell.trim()));
+
+                      // Create the table with CSS for full width
+                      let tableHTML = '<table style="width: 100%; border-collapse: collapse;">';
+                      rows.forEach((row, index) => {
+                          tableHTML += '<tr>';
+                          row.forEach(cell => {
+                              // Replace **text** with <strong>text</strong>
+                              const formattedCell = cell.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                              tableHTML += index === 0
+                                  ? `<th style="border: 1px solid #aaa; padding: 8px; text-align: left;">${formattedCell}</th>`
+                                  : `<td style="border: 1px solid #aaa; padding: 8px;">${formattedCell}</td>`;
+                          });
+                          tableHTML += '</tr>';
+                      });
+                      tableHTML += '</table>';
+
+                      return tableHTML;
+                  }
+
+
+                  // Replace new lines with <br> and format bold text
+                  let formattedResponse = response
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/\n/g, '<br>')
+                    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+                  // Regex to find all pipe-separated tables within the response
+                  const tableRegex = /((?:[^\|\n]*\|)+[^\|\n]*)(?:\n((?:[^\|\n]*\|)+[^\|\n]*))+/g;
+                  let matches;
+                  let lastIndex = 0;
+                  let finalHTML = '';
+
+                  // Loop through all matches to build the final HTML
+                  while ((matches = tableRegex.exec(response)) !== null) {
+                      // Extract parts before the current table
+                      const beforeTable = response.slice(lastIndex, matches.index);
+                      finalHTML += beforeTable.replace(/\n/g, '<br>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+                      // Extract and convert the matched table
+                      const tableText = matches[0].trim();
+                      const tableHTML = convertToTable(tableText);
+                      finalHTML += tableHTML;
+
+                      // Update the last index to the end of the current match
+                      lastIndex = matches.index + matches[0].length;
+                  }
+
+                  // Add any remaining text after the last table
+                  const afterTable = response.slice(lastIndex);
+                  finalHTML += afterTable.replace(/\n/g, '<br>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+                
+                    
+                let sanitizedString = finalHTML.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+                indicatorChanged = new Typed('#indicator_message', {
+                strings: [sanitizedString],
+                typeSpeed: 1,
+                showCursor: false,
+                });
+                // indicatorChanged = new Typed('#indicator_message', {
+                //       strings: [finalMessages[getRandom(0, 9)]],
+                //       typeSpeed: 10,
+                //       showCursor: false,
+                //     });
+
+                    setTimeout(function(){
+                        indicatorChanged = new Typed('#indicator_message', {
+                            strings: [finalHTML],
+                            typeSpeed: 1,
+                            showCursor: false,
+                            onComplete: (self) => {
+                                // {#clearInterval(intervalID);#}
+                            },
+                        });
+
+                        $('.dec-scroll-bottom').show();
+                        $('#indicator_message').removeAttr('id');
+                    }, 2000);
+
+                    // Update sources section
+                    sourceList.innerHTML = ''; // Clear existing sources
+                    if (sources.length) {
+                        let i = 1;
+                        let j = 0;
+                        sources.forEach(source => {
+                            if (source.replace(/\s/g, "") === '') {
+                                return;
+                            }
+                            const sourceItem = document.createElement('div');
+                            sourceItem.classList.add('dec-sources-item');
+
+                            const sourceItemNumber = document.createElement('div');
+                            sourceItemNumber.classList.add('dec-sources-num');
+                            sourceItemNumber.textContent = i + '.';
+
+                            const sourceItemTitle = document.createElement('a');
+                            let textToLink = document.createTextNode(source);
+                            sourceItemTitle.classList.add('dec-sources-title');
+                            sourceItemTitle.appendChild(textToLink);
+
+                            sourceItemTitle.href = source_links[j].replace(/\s/g, "") === '' ? '#' : source_links[j];
+
+                            sourceItem.appendChild(sourceItemNumber);
+                            sourceItem.appendChild(sourceItemTitle);
+                            sourceList.appendChild(sourceItem);
+
+                            i++;
+                            j++;
+                        });
+                    }
+
+                    // Update suggestive questions section
+                    suggestiveList.innerHTML = ''; // Clear existing suggestive questions
+                    if (suggestiveQuestions.length) {
+                        suggestiveQuestions.forEach(question => {
+                            if (question.replace(/\s/g, "") === '') {
+                                return;
+                            }
+                            let questionItem = document.createElement('div');
+                            questionItem.classList.add('dec-question-card');
+
+                            let questionIcon = document.createElement('i');
+                            questionIcon.classList.add('fas', 'fa-arrow-circle-left');
+
+                            let questionText = document.createElement('div');
+                            questionText.classList.add('dec-question-text');
+                            questionText.textContent = question;
+
+                            questionItem.appendChild(questionIcon);
+                            questionItem.appendChild(questionText);
+
+                            // {#const listItem = document.createElement('li');#}
+                            // {#listItem.textContent = question;#}
+                            suggestiveList.appendChild(questionItem);
+                        });
+                    }
+
+                    $('.fa-chevron-left').click();
+                })
+                .catch(err => {
+                   console.log(err);
+                });
+
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+    }
+
+    let retrieveChatHistory = () => {
+        fetch('retrieve_chat_history', {
+            method: 'GET',
+        })
+            .then(response => response.json())
+            .then(data => {
+                chatHistoryData = [];
+                $('#dec_history').empty();
+
+                chatHistoryData = data;
+                const uniqueSessions = [...new Set(data.map(item => item.session_id))];
+                let uniqueTitles = [];
+
+                for (let i = 0; i < uniqueSessions.length; i++) {
+                    let current = uniqueSessions[i];
+                    let title = data.find(x => x.session_id === current);
+                    let obj = {
+                        title: title.message,
+                        sessionId: current
+                    }
+                    uniqueTitles.push(obj);
+                }
+
+                for (let i = 0; i < uniqueTitles.length; i++) {
+                    let t = uniqueTitles[i];
+                    const historyItemWrapper = document.createElement('div');
+                    historyItemWrapper.classList.add('dec-history-item-container');
+
+                    const titleWrapper = document.createElement('div');
+                    titleWrapper.classList.add('dec-history-item');
+                    titleWrapper.textContent = t.title.length > 32 ? t.title.substring(0, 32) + '...' : t.title;
+                    titleWrapper.setAttribute('data-id', t.sessionId);
+
+                    const deleteHistoryItemButton = document.createElement('div');
+                    deleteHistoryItemButton.classList.add('dec-history-item-delete');
+                    deleteHistoryItemButton.setAttribute('data-id', t.sessionId);
+                    let icon = document.createElement('i');
+                    icon.classList.add('fas', 'fa-trash')
+                    deleteHistoryItemButton.appendChild(icon);
+                    historyItemWrapper.appendChild(titleWrapper);
+                    historyItemWrapper.appendChild(deleteHistoryItemButton);
+                    chatHistory.appendChild(historyItemWrapper);
+                }
+            });
+    }
+
+    let createNewSession = () => {
+        fetch('create_new_session', {
+            method: 'POST',
+            body: new URLSearchParams({
+                'csrfmiddlewaretoken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                currentSessionId = data.session_id;
+                $('#dec_chat_container').empty();
+                $('#dec_sources').empty();
+                $('#dec_suggestive_questions_container').empty();
+                $('#dec_chat_title').html('New Chat');
+                retrieveChatHistory();
+            });
+    }
+
+</script>
+
+
+</body>
+</html>

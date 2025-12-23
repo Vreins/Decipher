@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Register</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/4.0/examples/sign-in/">
+    <style>
+        .body-background {
+            background: rgb(71, 19, 94);
+            background: linear-gradient(220deg, rgba(71, 19, 94, 1) 0%, rgba(1, 1, 1, 1) 40%, rgba(1, 1, 1, 1) 60%, rgba(10, 100, 110, 1) 100%);
+        }
+    </style>
+    <style>
+        canvas {
+            background-color: #ffffff00;
+            transform: translate(-50%, -50%);
+        }
+
+        #ring-canvas-1 {
+            position: absolute;
+            top: 50%;
+            right: -15%;
+            width: 500px;
+            height: 500px;
+        }
+
+        /* Media query for screens smaller than 767px */
+        @media (max-width: 767px) {
+            #ring-canvas-1 {
+                position: relative; /* Change to relative positioning */
+                top: auto;
+                right: auto;
+                width: 80vw; /* Adjust size relative to viewport width */
+                height: 80vw; /* Maintain square proportions */
+                transform: none; /* Remove translate for mobile */
+                margin: 0 auto; /* Center the canvas on mobile */
+            }
+        }
+    </style>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"
+            integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function () {
+            function initializeCanvas(canvasId) {
+                const cvs = document.getElementById(canvasId);
+                console.log(cvs)
+                let context = cvs.getContext("2d");
+
+                let centerPt = {x: 0, y: 0},
+                    PI = Math.PI,
+                    numRings = 100,
+                    rings = [];
+
+                const colors = ['#FFF9C7', '#FBE182', '#9FEDD7'];
+
+                function resizeHandler() {
+                    const isMobile = window.innerWidth <= 767;
+                    const canvasSize = isMobile ? Math.min(window.innerWidth * 0.8, 400) : 500;
+
+                    cvs.width = canvasSize;
+                    cvs.height = canvasSize;
+                    centerPt.x = Math.round(cvs.width / 2);
+                    centerPt.y = Math.round(cvs.height / 2);
+                }
+
+                window.addEventListener('resize', resizeHandler);
+                resizeHandler();
+
+                function createPoints() {
+                    for (let r = numRings; r--;) {
+                        rings.push({
+                            ang: (1 - Math.random() * 2) * PI,
+                            radius: 200,
+                            spin: Math.random() * PI,
+                            speed_spin: (1 - Math.random() * 2) * 0.005,
+                            speed_rot: (1 - Math.random() * 2) * 0.005,
+                            color: colors[Math.floor(Math.random() * colors.length)]
+                        });
+                    }
+                }
+
+                function drawPoints() {
+                    context.clearRect(0, 0, cvs.width, cvs.height);
+
+                    rings.forEach(currRing => {
+                        currRing.ang += currRing.speed_rot;
+                        currRing.spin += currRing.speed_spin;
+                        drawEllipse(context, currRing.radius, Math.sin(currRing.spin), currRing.ang, currRing.color);
+                    });
+
+                    requestAnimationFrame(drawPoints);
+                }
+
+                function drawEllipse(context, radius, spin, ang, color) {
+                    context.save();
+                    context.translate(centerPt.x, centerPt.y);
+                    context.rotate(ang);
+                    context.scale(spin, 1);
+                    context.beginPath();
+                    context.arc(0, 0, radius, 0, 2 * Math.PI, false);
+                    context.restore();
+
+                    context.lineWidth = 1;
+                    context.strokeStyle = color;
+                    context.stroke();
+                }
+
+                createPoints();
+                drawPoints();
+            }
+
+            initializeCanvas('ring-canvas-1');
+        });
+    </script>
+
+
+    <!-- Bootstrap core CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="https://getbootstrap.com/docs/4.0/examples/sign-in/signin.css" rel="stylesheet">
+    <script data-dapp-detection="">
+        (function () {
+            let alreadyInsertedMetaTag = false
+
+            function __insertDappDetected() {
+                if (!alreadyInsertedMetaTag) {
+                    const meta = document.createElement('meta')
+                    meta.name = 'dapp-detected'
+                    document.head.appendChild(meta)
+                    alreadyInsertedMetaTag = true
+                }
+            }
+
+            if (window.hasOwnProperty('web3')) {
+                // Note a closure can't be used for this var because some sites like
+                // www.wnyc.org do a second script execution via eval for some reason.
+                window.__disableDappDetectionInsertion = true
+                // Likely oldWeb3 is undefined and it has a property only because
+                // we defined it. Some sites like wnyc.org are evaling all scripts
+                // that exist again, so this is protection against multiple calls.
+                if (window.web3 === undefined) {
+                    return
+                }
+                __insertDappDetected()
+            } else {
+                var oldWeb3 = window.web3
+                Object.defineProperty(window, 'web3', {
+                    configurable: true,
+                    set: function (val) {
+                        if (!window.__disableDappDetectionInsertion)
+                            __insertDappDetected()
+                        oldWeb3 = val
+                    },
+                    get: function () {
+                        if (!window.__disableDappDetectionInsertion)
+                            __insertDappDetected()
+                        return oldWeb3
+                    }
+                })
+            }
+        })()</script>
+</head>
+
+<body class="text-center body-background">
+<canvas id="ring-canvas-1"></canvas>
+{% if messages %}
+    <ul>
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<form class="form-signin" method="POST">
+    {% csrf_token %}
+    <!-- {% if error %}
+            <div class="alert alert-danger error-message" role="alert">{{ error }}</div>
+        {% endif %} -->
+
+    {% load static %}
+    <img src="{% static '/img/logo.png' %}"
+         alt="" width="200" style="padding-bottom: 30px">
+    <h2 class="text-white">Register</h2>
+
+    <label for="inputname" class="sr-only">Username</label>
+    <input type="text" id="inputname" class="form-control mb-3" placeholder="Username" required autofocus
+           name="username" value="{{ form.username.value|default_if_none:'' }}">
+    {% for error in form.username.errors %}
+        <div class="alert alert-danger error-message">{{ error }}</div>
+    {% endfor %}
+
+    <label for="inputEmail" class="sr-only">Email address</label>
+    <input type="email" id="inputEmail" class="form-control mb-3" placeholder="Email address" required name="email"
+           value="{{ form.email.value|default_if_none:'' }}">
+    {% for error in form.email.errors %}
+        <div class="alert alert-danger error-message">{{ error }}</div>
+    {% endfor %}
+
+    <label for="inputPassword" class="sr-only">Password</label>
+    <input type="password" id="inputPassword" class="form-control mb-3" placeholder="Password" required name="password">
+
+    <label for="inputConfirmPassword" class="sr-only">Confirm Password</label>
+    <input type="password" id="inputConfirmPassword" class="form-control mb-3" placeholder="Confirm Password" required
+           name="confirm_password">
+    {% for error in form.confirm_password.errors %}
+        <div class="alert alert-danger error-message">{{ error }}</div>
+    {% endfor %}
+
+    <button type="submit" class="btn btn-lg btn-primary btn-block" style="color: black; background: #FBE182;">Register
+    </button>
+
+    <div class="text-white">Already have an account? <a href="{% url 'login' %}">Login here</a></div>
+</form>
+
+
+<script>
+    // Check for all error messages
+    const errorMessages = document.querySelectorAll('.error-message');
+    errorMessages.forEach(errorMessage => {
+        // Set a timeout to fade out the error message after 3 seconds
+        setTimeout(() => {
+            errorMessage.style.transition = "opacity 0.5s ease";
+            errorMessage.style.opacity = 0;
+            // Optional: Remove the message from the DOM after fading out
+            setTimeout(() => {
+                errorMessage.remove();
+            }, 500); // Match the duration of the fade-out
+        }, 3000); // 3000 milliseconds = 3 seconds
+    });
+</script>
+</body>
+</html>
+
+
+<!-- <html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+</head>
+<body>
+    <h2>Register</h2>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}  <!-- Render the form fields -->
+<!-- <button type="submit">Register</button>
+    </form>
+    <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+</body>
+</html> -->

@@ -1,0 +1,5 @@
+.env
+.virtual_documents
+.venv
+.ipynb_checkpoints
+uploaded_files
